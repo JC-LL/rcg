@@ -1,0 +1,2 @@
+# rcg
+Random Circuit Generator
