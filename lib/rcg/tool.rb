@@ -21,7 +21,6 @@ module RCG
 
       expr_gen = ExpressionMaker.new(nb_inputs,sharing_effort)
       checker  = TautologyChecker.new
-
       puts "[+] creating #{nb_outputs} outputs expressions"
 
       expressions=nb_outputs.times.collect do |i|
@@ -55,7 +54,7 @@ module RCG
 
       puts "[+] generating VHDL circuit   '#{netlist.name}'"
       vhdl=VHDLPrinter.new
-      vhdl.print_gtech
+      vhdl.gen_gtech
       vhdl.print(netlist)
 
       puts "[+] generating VHDL testbench '#{netlist.name}_tb'"

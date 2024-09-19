@@ -38,16 +38,10 @@ module RCG
       code
     end
 
-    def entity_name circuit
-      name_wo_module=circuit.name.to_s.split("::")
-      mdata=name_wo_module.last.match(/(?<name>([a-zA-Z0-9]+))(_\d+)?/)
-      circuit_name=mdata[:name].downcase
-    end
 
     def entity circuit,delay="1 ps"
       code=Code.new
-      circuit_name=entity_name(circuit)
-      code << "entity #{circuit_name} is"
+      code << "entity #{circuit.name} is"
       code.indent=2
       code << "generic(DELAY : time := #{delay});" if delay
       code << "port("
@@ -100,8 +94,8 @@ module RCG
     end
 
     def instanciate comp
-      comp_name=entity_name(comp)
       inst_name=instance_name(comp)
+      comp_name=comp.class.to_s.split("::").last.downcase
       code=Code.new
       code << "#{inst_name}: entity gtech.#{comp_name}"
       code.indent=4
@@ -120,11 +114,11 @@ module RCG
       code
     end
 
-    def print_gtech
+    def gen_gtech
       GTECH.each do |klass|
         gate=klass.new
+        gate.name=klass.to_s.split("::").last.downcase
         code=Code.new
-        entity=entity_name(gate)
         code << header
         code << ieee
         code.newline
@@ -132,18 +126,17 @@ module RCG
         code.newline
         code << archi_of(gate)
         code.newline
-        code.save_as(filename="#{entity}.vhd")
+        code.save_as(filename="#{gate.name}.vhd")
         @gtech_files << filename
       end
     end
 
     def archi_of gate
-      entity=entity_name(gate)
       code=Code.new
-      code << "architecture equation of #{entity} is"
+      code << "architecture equation of #{gate.name} is"
       code << "begin"
       code.indent=2
-      case fname=func_from(entity)
+      case fname=logical_func_of(gate)
       when "or","and","xor","nor","nand"
         code << "f <= i0 #{fname} i1 after DELAY;"
       when "inv"
@@ -156,8 +149,8 @@ module RCG
       code
     end
 
-    def func_from entity_name
-      mdata=entity_name.match(/(?<func>([a-zA-Z]+))\d*/)
+    def logical_func_of gate
+      mdata=gate.name.to_s.match(/(?<func>([a-zA-Z]+))\d*/)
       mdata[:func]
     end
 

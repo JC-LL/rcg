@@ -1,3 +1,4 @@
+require_relative "./rcg/debug.rb"
 require_relative "./rcg/version.rb"
 require_relative "./rcg/ast_expression.rb"
 require_relative "./rcg/ast_circuit.rb"
