@@ -9,9 +9,5 @@ params={
   verbose:        false,
 }
 
-nb_vars            = params[:nb_inputs]
-sharing_effort     = params[:sharing_effort]
-expr_depth         = params[:depth]
-
 tool=RCG::Tool.new
 netlist=tool.run(params)
