@@ -1,5 +1,11 @@
-require_relative "rcg/ast"
-require_relative "rcg/circuit"
-require_relative "rcg/vhdl_gen"
-module Rcg
-end
+require_relative "./rcg/version.rb"
+require_relative "./rcg/ast_expression.rb"
+require_relative "./rcg/ast_circuit.rb"
+require_relative "./rcg/code.rb"
+require_relative "./rcg/maker_expression.rb"
+require_relative "./rcg/maker_circuit.rb"
+require_relative "./rcg/printer_dot.rb"
+require_relative "./rcg/printer_vhdl.rb"
+require_relative "./rcg/tautology_checker.rb"
+require_relative "./rcg/gtech.rb"
+require_relative "./rcg/tool.rb"
