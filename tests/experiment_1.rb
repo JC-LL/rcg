@@ -6,6 +6,9 @@ params={
   nb_outputs:     4,
   depth:          5,
   sharing_effort: 40,
+  #---------------------------
+  gen_tb:         true,
+  nb_vectors:     10,
   verbose:        false,
 }
 
