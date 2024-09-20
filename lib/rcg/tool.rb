@@ -16,6 +16,8 @@ module RCG
       nb_inputs      = params[:nb_inputs]
       nb_outputs     = params[:nb_outputs]
       depth          = params[:depth]
+      gen_tb         = params[:gen_tb]
+      nb_vectors     = params[:nb_vectors]
       sharing_effort = params[:sharing_effort]
       $verbose       = params[:verbose]
 
@@ -57,21 +59,22 @@ module RCG
       vhdl.gen_gtech
       vhdl.print(netlist)
 
-      puts "[+] generating VHDL testbench '#{netlist.name}_tb'"
-      vhdl.gen_tb(netlist)
+      if gen_tb
+        puts "[+] generating VHDL testbench '#{netlist.name}_tb'"
+        vhdl.gen_tb(netlist,nb_vectors)
+        puts "[+] generating compile script 'compile_script'"
+        vhdl.gen_compile_script(netlist)
 
-      puts "[+] generating compile script 'compile_script'"
-      vhdl.gen_compile_script(netlist)
+        puts "[+] running compile script "
+        system("chmod +x compile_script")
+        system("./compile_script")
 
-      puts "[+] running compile script "
-      system("chmod +x compile_script")
-      system("./compile_script")
-
-      puts "[+] generating gtkwave waveform file"
-      vhdl.gen_gtwave(netlist)
-      puts "[+] waveform viewing"
-      puts cmd="gtkwave #{netlist.name}_tb.ghw #{netlist.name}_tb.sav "
-      exec(cmd)
+        puts "[+] generating gtkwave waveform file"
+        vhdl.gen_gtwave(netlist)
+        puts "[+] waveform viewing"
+        cmd="gtkwave #{netlist.name}_tb.ghw #{netlist.name}_tb.sav "
+        exec(cmd)
+      end
     end
 
     def print_dot netlist

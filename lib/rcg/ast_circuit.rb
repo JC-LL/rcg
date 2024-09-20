@@ -90,12 +90,6 @@ module RCG
     end
   end
 
-  class Inv < Gate1
-  end
-
-  class Buf < Gate1
-  end
-
   class Gate2 < Circuit
     def initialize
       super
@@ -103,20 +97,5 @@ module RCG
       self << Input.new(:i1,self)
       self << Output.new(:f,self)
     end
-  end
-
-  class And2 < Gate2
-  end
-
-  class Or2 < Gate2
-  end
-
-  class Xor2 < Gate2
-  end
-
-  class Nand2 < Gate2
-  end
-
-  class Nor2 < Gate2
   end
 end

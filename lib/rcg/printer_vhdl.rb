@@ -154,7 +154,7 @@ module RCG
       mdata[:func]
     end
 
-    def gen_tb circuit
+    def gen_tb circuit,nb_vectors=10
       code=Code.new
       code
       code << header
@@ -179,7 +179,7 @@ module RCG
       code.indent=2
       code << clk_and_reset()
       code << dut(circuit)
-      code << stim_process(circuit)
+      code << stim_process(circuit,nb_vectors)
       code.indent=0
       code << "end bhv;"
       code.save_as "#{circuit.name}_tb.vhd"
@@ -215,7 +215,7 @@ module RCG
     end
 
     def stim_process circuit,nb_vect=10
-      pp stim_h=gen_random_stimuli(circuit,nb_vect)
+      stim_h=gen_random_stimuli(circuit,nb_vect)
       code=Code.new
       code << line(40)
       code << "-- stimuli generation"
