@@ -247,11 +247,7 @@ module RCG
     end
 
     def gen_random_stimuli circuit,nb_vect
-      stim_h={}
-      circuit.inputs.each do |input|
-        stim_h[input.name.to_s]=Array.new(nb_vect){rand(2)}
-      end
-      stim_h
+      StimuliMaker.new.gen_for(circuit,nb_vect)
     end
 
     def gen_compile_script circuit
