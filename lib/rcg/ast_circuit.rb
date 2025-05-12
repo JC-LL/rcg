@@ -14,6 +14,7 @@ module RCG
     attr_accessor :wire
     attr_accessor :component
     attr_accessor :source,:sinks
+    attr_accessor :value
     def initialize name,component
       @name=name
       @component=component
@@ -46,6 +47,8 @@ module RCG
     @@id=-1
     attr_accessor :name
     attr_accessor :inputs,:outputs,:components
+    attr_accessor :delay
+
     def initialize name=nil
       @name=name || "#{self.class}_#{@@id+=1}"
       @inputs,@outputs=[],[]
@@ -61,6 +64,16 @@ module RCG
       when Circuit
         @components << e unless @components.any?{|comp| comp.name==e.name}
       end
+    end
+
+    def create i_or_o, name
+      case i_or_o
+      when :input
+        self << port=Input.new(name,self)
+      when :output
+        self << port=Output.new(name,self)
+      end
+      port
     end
 
     def get_port_named name
@@ -80,6 +93,14 @@ module RCG
       end
       port_fanout_h.values.sum.to_f / port_fanout_h.size
     end
+
+    def get_regs
+      @components.select{|comp| comp.is_a?(RCG::Dff)}
+    end
+
+    def get_comb_seq
+      @components.partition{|comp| comp.is_a?(RCG::Dff)}
+    end
   end
 
   class Gate1 < Circuit
@@ -96,6 +117,14 @@ module RCG
       self << Input.new(:i0,self)
       self << Input.new(:i1,self)
       self << Output.new(:f,self)
+    end
+  end
+
+  class Dff < Circuit
+    def initialize
+      super
+      self << Input.new(:d,self)
+      self << Output.new(:q,self)
     end
   end
 end

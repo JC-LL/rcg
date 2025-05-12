@@ -1,4 +1,5 @@
 module RCG
+  
   class Inv < Gate1
   end
 
@@ -19,6 +20,7 @@ module RCG
 
   class Nor2 < Gate2
   end
-  
+
   GTECH=[Inv,And2,Or2,Xor2,Nand2,Nor2]
+
 end

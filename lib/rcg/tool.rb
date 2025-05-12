@@ -11,7 +11,7 @@ module RCG
     end
 
     # from params, builds and returns a circuit
-    def run params={}
+    def generate_circuit params={}
       name           = params[:name]
       nb_inputs      = params[:nb_inputs]
       nb_outputs     = params[:nb_outputs]
@@ -19,6 +19,7 @@ module RCG
       gen_tb         = params[:gen_tb]
       nb_vectors     = params[:nb_vectors]
       sharing_effort = params[:sharing_effort]
+      delay_model    = params[:delay_model]
       $verbose       = params[:verbose]
 
       expr_gen = ExpressionMaker.new(nb_inputs,sharing_effort)
@@ -56,29 +57,40 @@ module RCG
 
       puts "[+] generating VHDL circuit   '#{netlist.name}'"
       vhdl=VHDLPrinter.new
-      vhdl.gen_gtech
-      vhdl.print(netlist)
-
+      vhdl.gen_gtech(delay_model)
+      vhdl.print(netlist,delay_model)
+      model="_#{delay_model}" if delay_model
       if gen_tb
-        puts "[+] generating VHDL testbench '#{netlist.name}_tb'"
-        vhdl.gen_tb(netlist,nb_vectors)
-        puts "[+] generating compile script 'compile_script'"
-        vhdl.gen_compile_script(netlist)
+        puts "[+] generating VHDL testbench '#{netlist.name}#{model}_tb'"
+        vhdl.gen_tb(netlist,nb_vectors,delay_model)
+        puts "[+] generating compile script 'compile_script#{model}'"
+        vhdl.gen_compile_script(netlist,delay_model)
 
-        puts "[+] running compile script "
-        system("chmod +x compile_script")
-        system("./compile_script")
+        puts "[+] running compile script#{model} "
+        system("chmod +x compile_script#{model}")
+        system("./compile_script#{model}")
 
         puts "[+] generating gtkwave waveform file"
-        vhdl.gen_gtwave(netlist)
+        vhdl.gen_gtkwave(netlist,delay_model)
         puts "[+] waveform viewing"
-        cmd="gtkwave #{netlist.name}_tb.ghw #{netlist.name}_tb.sav "
+        cmd="gtkwave #{netlist.name}#{model}_tb.ghw #{netlist.name}#{model}_tb.sav "
         exec(cmd)
       end
+      netlist
+    end
+
+    def read_blif filename
+      puts "[+] reading blif file '#{filename}'"
+      parser=BlifParser.new
+      circuit=parser.parse(filename)
     end
 
     def print_dot netlist
       DotPrinter.new.print(netlist)
+    end
+
+    def invert circuit
+      CircuitInverter.new.invert(circuit)
     end
   end
 end

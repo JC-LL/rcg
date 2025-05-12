@@ -23,8 +23,8 @@ module RCG
       @vars.sample
     end
 
-    # Returns an existing expression whose depth equal _or less_ then the target depth passed as argument.
-    # strict_length indicates whether the returned expression must have the indicated depth.
+    # Returns an existing expression whose depth equal _or less_ than the target depth passed as argument.
+    # Strict_length indicates whether the returned expression must have the indicated depth.
     # This feature allows for unbalanced (l/r) expression generation.
     def pick_expr depth,strict_length
       apply_rand=rand(100) < @sharing_effort
@@ -72,5 +72,4 @@ module RCG
       ret
     end
   end
-
 end
