@@ -1,0 +1,40 @@
+[*]
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Thu May 15 20:20:23 2025
+[*]
+[dumpfile] "/home/jcll/JCLL/dev/EDA-ESL/rcg/tests/RISE_FALL/inv.ghw"
+[dumpfile_mtime] "Thu May 15 20:19:48 2025"
+[dumpfile_size] 348783
+[savefile] "/home/jcll/JCLL/dev/EDA-ESL/rcg/tests/RISE_FALL/inv.sav"
+[timestart] 87030000
+[size] 1920 1013
+[pos] -1 -1
+*-21.111509 97250000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] top.
+[treeopen] top.test_inv_tb.
+[sst_width] 212
+[signals_width] 259
+[sst_expanded] 1
+[sst_vpaned_height] 293
+@28
+top.test_inv_tb.reset_n
+top.test_inv_tb.clk
+@200
+-
+@8028
+top.test_inv_tb.dut.i
+@20000
+-
+@8028
+top.test_inv_tb.dut.internal_f
+@20000
+-
+-
+@8028
+top.test_inv_tb.dut.f
+@20001
+-
+@20000
+-
+[pattern_trace] 1
+[pattern_trace] 0

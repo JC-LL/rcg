@@ -1,0 +1,6 @@
+rm test_inv_tb
+ghdl -a --std=08 inv_rise_fall.vhd
+ghdl -a --std=08 test_inv_tb.vhd
+ghdl -e --std=08 test_inv_tb
+ghdl -r --std=08 test_inv_tb --wave=inv.ghw
+gtkwave inv.ghw inv.sav
