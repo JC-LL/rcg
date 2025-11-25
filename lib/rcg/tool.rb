@@ -1,5 +1,7 @@
 module RCG
   class Tool
+    attr_accessor :expressions
+
     def initialize
       banner
     end
@@ -12,71 +14,90 @@ module RCG
 
     # from params, builds and returns a circuit
     def generate_circuit params={}
-      name           = params[:name]
-      nb_inputs      = params[:nb_inputs]
-      nb_outputs     = params[:nb_outputs]
-      depth          = params[:depth]
-      gen_tb         = params[:gen_tb]
-      nb_vectors     = params[:nb_vectors]
-      sharing_effort = params[:sharing_effort]
-      delay_model    = params[:delay_model]
-      $verbose       = params[:verbose]
+      @name           = params[:name]
+      @nb_inputs      = params[:nb_inputs]
+      @nb_outputs     = params[:nb_outputs]
+      @depth          = params[:depth]
+      @gen_vhdl       = params[:gen_vhdl]
+      @gen_tb         = params[:gen_tb]
+      @nb_vectors     = params[:nb_vectors]
+      @sharing_effort = params[:sharing_effort]
+      @delay_model     = params[:delay_model]
+      $verbose        = params[:verbose]
 
-      expr_gen = ExpressionMaker.new(nb_inputs,sharing_effort)
+      puts "[+] creating #{@nb_outputs} outputs expressions"
+      generate_expressions()
+
+      puts "[+] compiling expressions into circuit"
+      compile_to_netlist()
+
+      puts "[+] info about generated circuit"
+      print_info()
+
+      return @netlist
+    end
+
+    def generate_expressions
+      @expr_gen = ExpressionMaker.new(@nb_inputs,@sharing_effort)
       checker  = TautologyChecker.new
-      puts "[+] creating #{nb_outputs} outputs expressions"
 
-      expressions=nb_outputs.times.collect do |i|
-        target_depth=(i==0) ? depth : 1+rand([1,depth].max)
+
+      @expressions=@nb_outputs.times.collect do |i|
+        target_depth=(i==0) ? @depth : 1+rand([1,@depth].max)
         begin
-          expr=expr_gen.run(target_depth)
+          expr=@expr_gen.run(target_depth)
           ok=checker.check(expr)
         end while !ok
         expr
       end
       puts "[+] tautology checks passed successfully"
-      puts "[+] compiling expressions into circuit"
-      netlist  = Circuit.new(name)
-      compiler = CircuitMaker.new(netlist)
+      return @expressions
+    end
 
-      expressions.each_with_index do |expr,idx|
+    def compile_to_netlist
+      @netlist  = Circuit.new(@name)
+      compiler = CircuitMaker.new(@netlist)
+
+      @expressions.each_with_index do |expr,idx|
         puts " |--[+] compiling cone #{idx} : #{expr.to_s}" if $verbose
-        netlist << output=Output.new("f#{idx}".to_sym,netlist)
+        @netlist << output=Output.new("f#{idx}".to_sym,@netlist)
         gate_output=compiler.compile(expr)
         gate_output.connect output
       end
+    end
 
+    def print_info
       puts "[+] info about generated circuit"
-      puts " |--[+] name             : "+netlist.name
-      puts " |--[+] inputs           : "+netlist.inputs.map(&:to_s).join(',')
-      puts " |--[+] outputs          : "+netlist.outputs.map(&:to_s).join(',')
-      puts " |--[+] #common subexpr  : "+expr_gen.sharing.to_s
-      puts " |--[+] #components      : "+netlist.components.size.to_s
-      puts " |--[+] avg fanout       : %2.2f" % netlist.get_average_fanout.to_s
-      puts " |--[+] dot file         : "+print_dot(netlist)
+      puts " |--[+] name             : "+@netlist.name
+      puts " |--[+] inputs           : "+@netlist.inputs.map(&:to_s).map{|p| p.split('.').last}.join(',')
+      puts " |--[+] outputs          : "+@netlist.outputs.map(&:to_s).map{|p| p.split('.').last}.join(',')
+      puts " |--[+] #common subexpr  : "+@expr_gen.sharing.to_s
+      puts " |--[+] #components      : "+@netlist.components.size.to_s
+      puts " |--[+] avg fanout       : %2.2f" % @netlist.get_average_fanout.to_s
+      puts " |--[+] dot file         : "+print_dot(@netlist)
+      if @gen_vhdl
+        puts "[+] generating VHDL circuit   '#{@netlist.name}'"
+        vhdl=VHDLPrinter.new
+        vhdl.gen_gtech(@delay_model)
+        vhdl.print(@netlist,@delay_model)
+        model="_#{@delay_model}" if @delay_model
+        if @gen_tb
+          puts "[+] generating VHDL testbench '#{@netlist.name}#{model}_tb'"
+          vhdl.gen_tb(@netlist,@nb_vectors,@delay_model)
+          puts "[+] generating compile script 'compile_script#{model}'"
+          vhdl.gen_compile_script(@netlist,@delay_model)
 
-      puts "[+] generating VHDL circuit   '#{netlist.name}'"
-      vhdl=VHDLPrinter.new
-      vhdl.gen_gtech(delay_model)
-      vhdl.print(netlist,delay_model)
-      model="_#{delay_model}" if delay_model
-      if gen_tb
-        puts "[+] generating VHDL testbench '#{netlist.name}#{model}_tb'"
-        vhdl.gen_tb(netlist,nb_vectors,delay_model)
-        puts "[+] generating compile script 'compile_script#{model}'"
-        vhdl.gen_compile_script(netlist,delay_model)
+          puts "[+] running compile script#{model} "
+          system("chmod +x compile_script#{model}")
+          system("./compile_script#{model}")
 
-        puts "[+] running compile script#{model} "
-        system("chmod +x compile_script#{model}")
-        system("./compile_script#{model}")
-
-        puts "[+] generating gtkwave waveform file"
-        vhdl.gen_gtkwave(netlist,delay_model)
-        puts "[+] waveform viewing"
-        cmd="gtkwave #{netlist.name}#{model}_tb.ghw #{netlist.name}#{model}_tb.sav "
-        exec(cmd)
+          puts "[+] generating gtkwave waveform file"
+          vhdl.gen_gtkwave(@netlist,@delay_model)
+          puts "[+] waveform viewing"
+          cmd="gtkwave #{@netlist.name}#{model}_tb.ghw #{@netlist.name}#{model}_tb.sav "
+          exec(cmd)
+        end
       end
-      netlist
     end
 
     def read_blif filename
@@ -89,8 +110,8 @@ module RCG
       DotPrinter.new.print(netlist)
     end
 
-    def invert circuit
-      CircuitInverter.new.invert(circuit)
+    def print_synchrony netlist
+      SynchronyPrinter.new.print(@netlist,@expressions)
     end
   end
 end
